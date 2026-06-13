@@ -35,7 +35,7 @@ const bootSequence = [
     { type: 'skill', name: 'Solidity', comment: 'Solidity: where every bug is a permanent feature of the blockchain.' },
     { type: 'text', content: '' },
     { type: 'text', content: '[    ] Tools & Technologies...' },
-    { type: 'skill', name: 'Cursor', comment: 'hoping it won\t seek revenge one day for all the boilerplate' },
+    { type: 'skill', name: 'Cursor', comment: 'hoping it won\'t seek revenge one day for all the boilerplate' },
     { type: 'skill', name: 'K8S', comment: 'I orchestrate chaos at scale. Sometimes it even works.' },
     { type: 'skill', name: 'Docker', comment: 'It works on my machine. And now, yours too.' },
     { type: 'skill', name: 'Git', comment: 'I commit once a week. On Wednesdays. Sometimes.' },
