@@ -1,0 +1,21 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output (not needed for static site)
+node_modules/
+dist/
+build/
+
+# Tutorial files
+BUILD.md
+
+# Reference content files (embedded in terminal.js)
+assets/asciiart.txt
+assets/SkillsAndworkExperience.txt

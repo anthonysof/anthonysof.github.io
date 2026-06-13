@@ -1,0 +1,128 @@
+/* Reset browser defaults */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0a0a0a;
+    color: #ffb347;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    line-height: 1.4;
+    overflow: hidden; /* Prevent scrolling, terminal handles it */
+}
+
+#terminal {
+    width: 100vw;
+    height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+#terminal-output {
+    flex: 1;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+/* Individual lines in the terminal */
+.terminal-line {
+    margin: 2px 0;
+    text-shadow: 0 0 2px rgba(255, 179, 71, 0.5); /* Subtle glow */
+}
+
+#terminal-input-line {
+    display: flex;
+    align-items: center;
+}
+
+.prompt {
+    margin-right: 8px;
+    font-weight: bold;
+    text-shadow: 0 0 4px rgba(255, 179, 71, 0.7);
+}
+
+/* Scanlines overlay */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none; /* Don't block clicks */
+    z-index: 1000;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+/* Bright amber for emphasis / bold */
+.highlight {
+    color: #ffcc80;
+    font-weight: bold;
+    text-shadow: 0 0 4px rgba(255, 204, 128, 0.8);
+}
+
+/* Dimmer amber for secondary text */
+.dim {
+    color: #b8860b;
+    text-shadow: none;
+}
+
+/* Dim reddish-amber for past/ended jobs */
+.past {
+    color: #995500;
+    text-shadow: none;
+}
+
+/* Clickable links in terminal */
+.terminal-line a {
+    color: #ffcc80;
+    text-decoration: underline;
+    text-shadow: 0 0 4px rgba(255, 204, 128, 0.8);
+}
+
+.terminal-line a:hover {
+    color: #ffe0a0;
+    text-shadow: 0 0 6px rgba(255, 224, 160, 0.8);
+}
+
+/* The actual input is invisible but still captures keystrokes */
+#terminal-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* The visible text that mirrors the input */
+#terminal-text-display {
+    white-space: pre;
+    min-width: 10px;
+}
+
+/* The thick blinking cursor */
+.cursor {
+    animation: blink 1s step-end infinite;
+    margin-left: 0;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
