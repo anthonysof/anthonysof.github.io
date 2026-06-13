@@ -45,10 +45,10 @@ const bootSequence = [
     { type: 'skill', name: 'Jenkins', comment: 'I break builds. Then I fix them. Then I break them again.' },
     { type: 'text', content: '' },
     { type: 'text', content: '[    ] Loading Employment Archives from Deep Storage...' },
-    { type: 'workexp', title: '    Matrix: Senior SW Eng. — Nokia (5G Core) ', status: '[STATUS: ACTIVE DEPLOYMENT]', statusClass: 'highlight' },
-    { type: 'workexp', title: '    Matrix: SW Eng. — Mitel Networks (OpenScape Voice) ', status: '[STATUS: NEURAL LINK SEVERED]', statusClass: 'past' },
-    { type: 'workexp', title: '    Matrix: SW Eng. — Atos (UCC - Public Safety) ', status: '[STATUS: DEPLOYMENT CONCLUDED]', statusClass: 'past' },
-    { type: 'workexp', title: '    Matrix: Freelance Developer — Various Operations ', status: '[STATUS: SIDE QUEST COMPLETE]', statusClass: 'past' },
+    { type: 'workexp', title: '    Senior SW Eng. \u2014 Nokia (5G Core)', status: ' [STATUS: ACTIVE DEPLOYMENT]', statusClass: 'highlight' },
+    { type: 'workexp', title: '    SW Eng. \u2014 Mitel Networks (OpenScape Voice)', status: ' [STATUS: NEURAL LINK SEVERED]', statusClass: 'past' },
+    { type: 'workexp', title: '    SW Eng. \u2014 Atos (UCC - Public Safety)', status: ' [STATUS: DEPLOYMENT CONCLUDED]', statusClass: 'past' },
+    { type: 'workexp', title: '    Freelance Developer \u2014 Various Operations', status: ' [STATUS: SIDE QUEST COMPLETE]', statusClass: 'past' },
     { type: 'text', content: '' },
     { type: 'text', content: '[ OK ] All systems nominal.' },
     { type: 'text', content: '' },
@@ -211,6 +211,8 @@ terminalInput.addEventListener('keydown', (e) => {
         if (command) {
             addLineToOutput(`${getPrompt()} ${command}`);
             processCommand(command);
+        } else {
+            addLineToOutput(`${getPrompt()}`);
         }
         terminalInput.value = '';
         terminalTextDisplay.textContent = '';
@@ -794,8 +796,12 @@ function showTop() {
     function quitTop() {
         clearInterval(intervalId);
         document.removeEventListener('keydown', quitHandler);
+        terminalInput.value = '';
         terminalOutput.innerHTML = '';
         addLineToOutput(`${getPrompt()} top`);
+        addLineToOutput('');
+        terminalTextDisplay.textContent = '';
+        commands.help();
         addLineToOutput('');
         if (isMobile) {
             terminalInputLine.style.display = 'none';
@@ -809,6 +815,7 @@ function showTop() {
 
     function quitHandler(e) {
         if (e.key === 'q' || e.key === 'Q') {
+            e.preventDefault();
             quitTop();
         }
     }
