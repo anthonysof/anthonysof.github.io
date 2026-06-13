@@ -246,7 +246,7 @@ body::before {
 /* Mobile: touch-based devices (not laptops with touchscreens) */
 @media (hover: none) {
     body {
-        font-size: 18px;
+        font-size: 14px;
         line-height: 1.5;
     }
 
@@ -256,6 +256,21 @@ body::before {
 
     #terminal-output {
         margin-bottom: 54px;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .terminal-line {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .top-row {
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     .whoami-container {
