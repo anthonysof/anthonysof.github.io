@@ -57,6 +57,7 @@ const bootSequence = [
 
 let skipAnimation = false;
 let passwordMode = false;
+const isMobile = navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches;
 
 async function sleep(ms) {
     if (skipAnimation) return;
@@ -78,12 +79,18 @@ async function sleep(ms) {
 function enableSkip() {
     skipAnimation = false;
     function handler(e) {
-        if (e.key === 'Enter' && e.target !== terminalInput) {
+        if ((e.key === 'Enter' && e.target !== terminalInput) || e.type === 'click' || e.type === 'touchstart') {
             skipAnimation = true;
             document.removeEventListener('keydown', handler);
+            document.removeEventListener('click', handler);
+            document.removeEventListener('touchstart', handler);
         }
     }
     document.addEventListener('keydown', handler);
+    if (isMobile) {
+        document.addEventListener('click', handler);
+        document.addEventListener('touchstart', handler);
+    }
 }
 
 async function runBootSequence() {
@@ -127,7 +134,12 @@ async function runBootSequence() {
     addLineToOutput('');
     addLineToOutput('Try "help" for available commands.');
     addLineToOutput('');
-    terminalInputLine.style.display = 'flex';
+    if (isMobile) {
+        terminalInputLine.style.display = 'none';
+        document.getElementById('mobile-footer').style.display = 'flex';
+    } else {
+        terminalInputLine.style.display = 'flex';
+    }
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
     terminalInput.disabled = false;
     terminalInput.focus();
@@ -156,12 +168,16 @@ async function animateProgressBar(duration, message) {
 async function waitForEnter() {
     return new Promise(resolve => {
         function handler(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.type === 'click' || e.type === 'touchstart') {
                 document.removeEventListener('keydown', handler);
+                document.removeEventListener('click', handler);
+                document.removeEventListener('touchstart', handler);
                 resolve();
             }
         }
         document.addEventListener('keydown', handler);
+        document.addEventListener('click', handler);
+        document.addEventListener('touchstart', handler);
     });
 }
 
@@ -206,6 +222,17 @@ terminalInput.addEventListener('input', () => {
         terminalTextDisplay.textContent = terminalInput.value;
     }
 });
+
+if (isMobile) {
+    document.querySelectorAll('.mobile-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (terminalInput.disabled) return;
+            const command = btn.dataset.command;
+            addLineToOutput(`${getPrompt()} ${command}`);
+            processCommand(command);
+        });
+    });
+}
 
 function getPrompt() {
     return 'visitor@myMindscape:~$';
@@ -253,6 +280,51 @@ function addClickableLine(parts) {
     });
 
     terminalOutput.appendChild(line);
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+function addLineToColumn(column, content, className = '') {
+    const line = document.createElement('div');
+    line.className = 'terminal-line';
+    if (className) line.className += ' ' + className;
+
+    if (typeof content === 'string') {
+        line.textContent = content;
+    } else if (Array.isArray(content)) {
+        content.forEach(part => {
+            const span = document.createElement('span');
+            span.textContent = part.text;
+            if (part.className) span.className = part.className;
+            line.appendChild(span);
+        });
+    }
+
+    column.appendChild(line);
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+function addClickableLineToColumn(column, parts) {
+    const line = document.createElement('div');
+    line.className = 'terminal-line';
+
+    parts.forEach(part => {
+        if (part.href) {
+            const a = document.createElement('a');
+            a.textContent = part.text;
+            a.href = part.href;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            if (part.className) a.className = part.className;
+            line.appendChild(a);
+        } else {
+            const span = document.createElement('span');
+            span.textContent = part.text || '';
+            if (part.className) span.className = part.className;
+            line.appendChild(span);
+        }
+    });
+
+    column.appendChild(line);
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
 }
 
@@ -326,7 +398,6 @@ async function showWhoami() {
     addLineToOutput('[ OK ] Decryption complete.');
     await sleep(400);
     addLineToOutput('');
-
     addLineToOutput([
         { text: 'Subject: ', className: 'dim' },
         { text: 'Antonis Sofras', className: 'highlight' },
@@ -334,182 +405,232 @@ async function showWhoami() {
         { text: 'Software Engineer', className: 'highlight' }
     ]);
     await sleep(100);
-
     addLineToOutput('');
-    addLineToOutput('---[ Employment Archives ]---');
+
+    const container = document.createElement('div');
+    container.className = 'whoami-container';
+
+    const leftCol = document.createElement('div');
+    leftCol.className = 'whoami-column-left';
+
+    const rightCol = document.createElement('div');
+    rightCol.className = 'whoami-column-right';
+
+    container.appendChild(leftCol);
+    container.appendChild(rightCol);
+    terminalOutput.appendChild(container);
+
+    await Promise.all([
+        animateLeftColumn(leftCol),
+        animateRightColumn(rightCol)
+    ]);
+
+    terminalInput.disabled = false;
+    terminalInput.focus();
+}
+
+async function animateLeftColumn(column) {
+    addLineToColumn(column, '---[ Employment Archives ]---');
     await sleep(100);
-    addLineToOutput('');
+    addLineToColumn(column, '');
 
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '> ', className: 'dim' },
         { text: 'Senior Software Engineer', className: 'highlight' },
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Nokia (5G Core, CMM)', className: 'highlight' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Mar 2025 \u2014 Present', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  "Currently deployed to the 5G Core battlefield."', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addLineToOutput('  Engineering on Nokia\'s flagship 5G Core network solution "Cloud Mobility');
+    addLineToColumn(column, '  Engineering on Nokia\'s flagship 5G Core network solution "Cloud Mobility');
     await sleep(20);
-    addLineToOutput('  Manager" (AMF, MME, SGSN). Ownership, design, development of new features');
+    addLineToColumn(column, '  Manager" (AMF, MME, SGSN). Ownership, design, development of new features');
     await sleep(20);
-    addLineToOutput('  (C++). Debugging on issues found during dev/testing and on critical service');
+    addLineToColumn(column, '  (C++). Debugging on issues found during dev/testing and on critical service');
     await sleep(20);
-    addLineToOutput('  disrupting issues directly on customers (T-Mobile, Bharti Airtel, Verizon).');
+    addLineToColumn(column, '  disrupting issues directly on customers (T-Mobile, Bharti Airtel, Verizon).');
     await sleep(20);
-    addLineToOutput('  Development of Skills/Rules to enable agentic development and debugging');
+    addLineToColumn(column, '  Development of Skills/Rules to enable agentic development and debugging');
     await sleep(20);
-    addLineToOutput('  through the use of Cursor.');
+    addLineToColumn(column, '  through the use of Cursor.');
     await sleep(20);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(600);
 
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '> ', className: 'dim' },
         { text: 'Software Engineer', className: 'highlight' },
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Mitel Networks (OpenScape Voice)', className: 'highlight' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Nov 2023 \u2014 Feb 2025', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  "Trusty ol\' VoIP."', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addLineToOutput('  Backend engineering of the OpenScape Voice SIP telephony solution (C++).');
+    addLineToColumn(column, '  Backend engineering of the OpenScape Voice SIP telephony solution (C++).');
     await sleep(20);
-    addLineToOutput('  Migration from C++97/98 to C++17 (GCC 2.X to GCC 10.X) for the whole');
+    addLineToColumn(column, '  Migration from C++97/98 to C++17 (GCC 2.X to GCC 10.X) for the whole');
     await sleep(20);
-    addLineToOutput('  legacy codebase. Containerization of the monolithic product using');
+    addLineToColumn(column, '  legacy codebase. Containerization of the monolithic product using');
     await sleep(20);
-    addLineToOutput('  Kubernetes. JITC certification for the product (US Dept. of Defense).');
+    addLineToColumn(column, '  Kubernetes. JITC certification for the product (US Dept. of Defense).');
     await sleep(20);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(600);
 
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '> ', className: 'dim' },
         { text: 'Software Engineer', className: 'highlight' },
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Atos (UCC - Public Safety Dept.)', className: 'highlight' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Feb 2019 \u2014 Nov 2023', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  "Built emergency call infrastructure. When your life is on the line, my code better not be."', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addLineToOutput('  Development (C++) and sustaining of OpenScape Voice (Enterprise Solution)');
+    addLineToColumn(column, '  Development (C++) and sustaining of OpenScape Voice (Enterprise Solution)');
     await sleep(20);
-    addLineToOutput('  and NG911 (ESInet, ESRP, PSAP) Emergency Call telephony infrastructure');
+    addLineToColumn(column, '  and NG911 (ESInet, ESRP, PSAP) Emergency Call telephony infrastructure');
     await sleep(20);
-    addLineToOutput('  solution. Back-end engineering of call processing and signalling features.');
+    addLineToColumn(column, '  solution. Back-end engineering of call processing and signalling features.');
     await sleep(20);
-    addLineToOutput('  Provisioning and data managing processes (database, shared memories).');
+    addLineToColumn(column, '  Provisioning and data managing processes (database, shared memories).');
     await sleep(20);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(600);
 
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '> ', className: 'dim' },
         { text: 'Freelance IT Technician and Developer', className: 'highlight' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Apr 2011 \u2014 2019', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  "The original solo side quest. I was indie before it was cool."', className: 'dim' }
     ]);
     await sleep(80);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addLineToOutput('  Small Businesses, Personal Computers, Side Projects, Assignments.');
+    addLineToColumn(column, '  Small Businesses, Personal Computers, Side Projects, Assignments.');
     await sleep(20);
-    addLineToOutput('');
+    addLineToColumn(column, '');
+    await sleep(600);
+}
+
+async function animateRightColumn(column) {
+    addLineToColumn(column, '---[ About Me ]---');
+    await sleep(100);
+    addLineToColumn(column, '');
+    addLineToColumn(column, '  This one\'s designation is Antonis Sofras. Hailing from Athens, Greece', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  fancies itself a Senior Software Engineer.', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '');
+    await sleep(20);
+    addLineToColumn(column, '  Its primary directive involves deciphering the cursed low-level', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  runes of C++ and whispering appeasements to the Linux kernel', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  until it decides to cooperate.', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '');
+    await sleep(20);
+    addLineToColumn(column, '  Despite my technical clearance, my chain of command is entirely', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  compromised; I report directly to a tyrannical feline overlord', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  named Maximus, whose demands for tribute far exceed any', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '  corporate latency thresholds.', 'dim');
+    await sleep(20);
+    addLineToColumn(column, '');
     await sleep(600);
 
-    addLineToOutput('---[ Education Logs ]---');
+    addLineToColumn(column, '---[ Education Logs ]---');
     await sleep(100);
-    addLineToOutput('');
-    addLineToOutput([
+    addLineToColumn(column, '');
+    addLineToColumn(column, [
         { text: 'ERROR: 404 Degree Not Found', className: 'highlight' }
     ]);
     await sleep(120);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Institution: University of Piraeus (2010 \u2014 2019)', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Program: Technology of Software and Intelligent Systems (TSIS)', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Status: Voluntary extraction from academia. Systems knowledge exceeded institutional bandwidth.', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '[ BACKUP CONSISTENCY PLAN ACTIVATED ]', className: 'highlight' }
     ]);
     await sleep(120);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Institution: Hellenic Open University (2026 \u2014 Present)', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Program: Computer Science, Undergraduate Studies', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput([
+    addLineToColumn(column, [
         { text: '  Status: Reconstructing academic credentials after the Great Dropout of 2019.', className: 'dim' }
     ]);
     await sleep(40);
-    addLineToOutput('');
+    addLineToColumn(column, '');
 
-    addLineToOutput('---[ Contact ]---');
+    addLineToColumn(column, '---[ Contact ]---');
     await sleep(100);
-    addLineToOutput('');
+    addLineToColumn(column, '');
     await sleep(20);
-    addClickableLine([
+    addClickableLineToColumn(column, [
         { text: '  Email: ', className: 'dim' },
         { text: 'antonis.sofras@gmail.com', className: 'highlight', href: 'mailto:antonis.sofras@gmail.com' }
     ]);
     await sleep(80);
-    addClickableLine([
+    addClickableLineToColumn(column, [
         { text: '  LinkedIn: ', className: 'dim' },
         { text: 'linkedin.com/in/antonis-sofras-58081b175', className: 'highlight', href: 'https://www.linkedin.com/in/antonis-sofras-58081b175/' }
     ]);
     await sleep(80);
-    addClickableLine([
+    addClickableLineToColumn(column, [
         { text: '  CV: ', className: 'dim' },
         { text: 'Download full CV (PDF)', className: 'highlight', href: 'assets/Sofras_CV_final.pdf' }
     ]);
     await sleep(80);
-    addLineToOutput('');
-
-    terminalInput.disabled = false;
-    terminalInput.focus();
+    addLineToColumn(column, '');
 }
 
 function processCommand(input) {
@@ -670,19 +791,37 @@ function showTop() {
         updateTopDisplay(container);
     }, 2000);
 
+    function quitTop() {
+        clearInterval(intervalId);
+        document.removeEventListener('keydown', quitHandler);
+        terminalOutput.innerHTML = '';
+        addLineToOutput(`${getPrompt()} top`);
+        addLineToOutput('');
+        if (isMobile) {
+            terminalInputLine.style.display = 'none';
+            document.getElementById('mobile-footer').style.display = 'flex';
+        } else {
+            terminalInputLine.style.display = 'flex';
+        }
+        terminalInput.disabled = false;
+        terminalInput.focus();
+    }
+
     function quitHandler(e) {
         if (e.key === 'q' || e.key === 'Q') {
-            clearInterval(intervalId);
-            document.removeEventListener('keydown', quitHandler);
-            terminalOutput.innerHTML = '';
-            addLineToOutput(`${getPrompt()} top`);
-            addLineToOutput('');
-            terminalInputLine.style.display = 'flex';
-            terminalInput.disabled = false;
-            terminalInput.focus();
+            quitTop();
         }
     }
     document.addEventListener('keydown', quitHandler);
+
+    if (isMobile) {
+        const quitBtn = document.createElement('button');
+        quitBtn.className = 'mobile-btn';
+        quitBtn.textContent = 'quit';
+        quitBtn.style.marginTop = '12px';
+        quitBtn.addEventListener('click', quitTop);
+        container.appendChild(quitBtn);
+    }
 }
 
 // ============================================================
