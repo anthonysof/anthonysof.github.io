@@ -169,7 +169,9 @@ async function waitForEnter() {
 
 // keep input focused
 document.addEventListener('click', () => {
-    terminalInput.focus();
+    if (!terminalInput.disabled && terminalInputLine.style.display !== 'none') {
+        terminalInput.focus();
+    }
 });
 
 terminalInput.addEventListener('keydown', (e) => {
