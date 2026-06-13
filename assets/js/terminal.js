@@ -31,11 +31,11 @@ const bootSequence = [
     { type: 'skill', name: 'C++', comment: 'I spend 10% of my time writing highly optimized code, and 90% of my time gaslighting the compiler into believing my pointers are safe.' },
     { type: 'skill', name: 'JavaScript', comment: 'I know how to prototype things. That code is still running somewhere in production.' },
     { type: 'skill', name: 'SQL', comment: 'I can join tables. Sometimes I even join the right ones.' },
-    { type: 'skill', name: 'Python', comment: 'Python is my duct tape for when C++ is overkill. Which is always.' },
+    { type: 'skill', name: 'Python', comment: 'MATHS!' },
     { type: 'skill', name: 'Solidity', comment: 'Solidity: where every bug is a permanent feature of the blockchain.' },
     { type: 'text', content: '' },
     { type: 'text', content: '[    ] Tools & Technologies...' },
-    { type: 'skill', name: 'Cursor', comment: 'Cursor is my tool. I do the thinking. It does the typing.' },
+    { type: 'skill', name: 'Cursor', comment: 'hoping it won\t seek revenge one day for all the boilerplate' },
     { type: 'skill', name: 'K8S', comment: 'I orchestrate chaos at scale. Sometimes it even works.' },
     { type: 'skill', name: 'Docker', comment: 'It works on my machine. And now, yours too.' },
     { type: 'skill', name: 'Git', comment: 'I commit once a week. On Wednesdays. Sometimes.' },
@@ -55,12 +55,39 @@ const bootSequence = [
     { type: 'final', content: 'Welcome to my mindscape. Press Enter to continue.' }
 ];
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+let skipAnimation = false;
+
+async function sleep(ms) {
+    if (skipAnimation) return;
+    return new Promise(resolve => {
+        const timeoutId = setTimeout(() => {
+            clearInterval(checkId);
+            resolve();
+        }, ms);
+        const checkId = setInterval(() => {
+            if (skipAnimation) {
+                clearTimeout(timeoutId);
+                clearInterval(checkId);
+                resolve();
+            }
+        }, 50);
+    });
+}
+
+function enableSkip() {
+    skipAnimation = false;
+    function handler(e) {
+        if (e.key === 'Enter' && e.target !== terminalInput) {
+            skipAnimation = true;
+            document.removeEventListener('keydown', handler);
+        }
+    }
+    document.addEventListener('keydown', handler);
 }
 
 async function runBootSequence() {
     terminalInputLine.style.display = 'none';
+    enableSkip();
 
     for (const step of bootSequence) {
         if (step.type === 'ascii') {
@@ -246,16 +273,17 @@ const commands = {
 async function showWhoami() {
     terminalInput.disabled = true;
     terminalTextDisplay.textContent = '';
+    enableSkip();
 
     addLineToOutput('');
     addLineToOutput('[    ] Accessing identity dossier...');
-    await sleep(120);
+    await sleep(200);
     addLineToOutput('[    ] Decrypting personnel records...');
-    await sleep(160);
+    await sleep(250);
     addLineToOutput('[    ] Decrypting education logs...');
-    await sleep(160);
+    await sleep(250);
     addLineToOutput('[ OK ] Decryption complete.');
-    await sleep(300);
+    await sleep(400);
     addLineToOutput('');
 
     addLineToOutput([
@@ -264,11 +292,11 @@ async function showWhoami() {
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Software Engineer', className: 'highlight' }
     ]);
-    await sleep(60);
+    await sleep(100);
 
     addLineToOutput('');
     addLineToOutput('---[ Employment Archives ]---');
-    await sleep(60);
+    await sleep(100);
     addLineToOutput('');
 
     addLineToOutput([
@@ -277,30 +305,31 @@ async function showWhoami() {
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Nokia (5G Core, CMM)', className: 'highlight' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  Mar 2025 \u2014 Present', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  "Currently deployed to the 5G Core battlefield."', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Engineering on Nokia\'s flagship 5G Core network solution "Cloud Mobility');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Manager" (AMF, MME, SGSN). Ownership, design, development of new features');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  (C++). Debugging on issues found during dev/testing and on critical service');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  disrupting issues directly on customers (T-Mobile, Bharti Airtel, Verizon).');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Development of Skills/Rules to enable agentic development and debugging');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  through the use of Cursor.');
-    await sleep(50);
+    await sleep(20);
     addLineToOutput('');
+    await sleep(600);
 
     addLineToOutput([
         { text: '> ', className: 'dim' },
@@ -308,26 +337,27 @@ async function showWhoami() {
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Mitel Networks (OpenScape Voice)', className: 'highlight' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  Nov 2023 \u2014 Feb 2025', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  "Trusty ol\' VoIP."', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Backend engineering of the OpenScape Voice SIP telephony solution (C++).');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Migration from C++97/98 to C++17 (GCC 2.X to GCC 10.X) for the whole');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  legacy codebase. Containerization of the monolithic product using');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Kubernetes. JITC certification for the product (US Dept. of Defense).');
-    await sleep(50);
+    await sleep(20);
     addLineToOutput('');
+    await sleep(600);
 
     addLineToOutput([
         { text: '> ', className: 'dim' },
@@ -335,53 +365,55 @@ async function showWhoami() {
         { text: ' \u2014 ', className: 'dim' },
         { text: 'Atos (UCC - Public Safety Dept.)', className: 'highlight' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  Feb 2019 \u2014 Nov 2023', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  "Built emergency call infrastructure. When your life is on the line, my code better not be."', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Development (C++) and sustaining of OpenScape Voice (Enterprise Solution)');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  and NG911 (ESInet, ESRP, PSAP) Emergency Call telephony infrastructure');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  solution. Back-end engineering of call processing and signalling features.');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Provisioning and data managing processes (database, shared memories).');
-    await sleep(50);
+    await sleep(20);
     addLineToOutput('');
+    await sleep(600);
 
     addLineToOutput([
         { text: '> ', className: 'dim' },
         { text: 'Freelance IT Technician and Developer', className: 'highlight' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  Apr 2011 \u2014 2019', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput([
         { text: '  "The original solo side quest. I was indie before it was cool."', className: 'dim' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput('  Small Businesses, Personal Computers, Side Projects, Assignments.');
-    await sleep(50);
+    await sleep(20);
     addLineToOutput('');
+    await sleep(600);
 
     addLineToOutput('---[ Education Logs ]---');
-    await sleep(60);
+    await sleep(100);
     addLineToOutput('');
     addLineToOutput([
         { text: 'ERROR: 404 Degree Not Found', className: 'highlight' }
     ]);
-    await sleep(60);
+    await sleep(120);
     addLineToOutput([
         { text: '  Institution: University of Piraeus (2010 \u2014 2019)', className: 'dim' }
     ]);
@@ -395,11 +427,11 @@ async function showWhoami() {
     ]);
     await sleep(40);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addLineToOutput([
         { text: '[ BACKUP CONSISTENCY PLAN ACTIVATED ]', className: 'highlight' }
     ]);
-    await sleep(60);
+    await sleep(120);
     addLineToOutput([
         { text: '  Institution: Hellenic Open University (2026 \u2014 Present)', className: 'dim' }
     ]);
@@ -415,24 +447,24 @@ async function showWhoami() {
     addLineToOutput('');
 
     addLineToOutput('---[ Contact ]---');
-    await sleep(60);
+    await sleep(100);
     addLineToOutput('');
-    await sleep(30);
+    await sleep(20);
     addClickableLine([
         { text: '  Email: ', className: 'dim' },
         { text: 'antonis.sofras@gmail.com', className: 'highlight', href: 'mailto:antonis.sofras@gmail.com' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addClickableLine([
         { text: '  LinkedIn: ', className: 'dim' },
         { text: 'linkedin.com/in/antonis-sofras-58081b175', className: 'highlight', href: 'https://www.linkedin.com/in/antonis-sofras-58081b175/' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addClickableLine([
         { text: '  CV: ', className: 'dim' },
         { text: 'Download full CV (PDF)', className: 'highlight', href: 'assets/Sofras_CV_final.pdf' }
     ]);
-    await sleep(50);
+    await sleep(80);
     addLineToOutput('');
 
     terminalInput.disabled = false;
