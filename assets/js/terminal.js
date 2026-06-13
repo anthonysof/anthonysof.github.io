@@ -56,6 +56,7 @@ const bootSequence = [
 ];
 
 let skipAnimation = false;
+let passwordMode = false;
 
 async function sleep(ms) {
     if (skipAnimation) return;
@@ -128,6 +129,7 @@ async function runBootSequence() {
     addLineToOutput('');
     terminalInputLine.style.display = 'flex';
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    terminalInput.disabled = false;
     terminalInput.focus();
 }
 
@@ -176,6 +178,19 @@ document.addEventListener('click', () => {
 
 terminalInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+        if (passwordMode) {
+            const pwd = terminalInput.value.trim();
+            addLineToOutput('');
+            addLineToOutput('Authentication successful.');
+            addLineToOutput('');
+            startCascade();
+            passwordMode = false;
+            document.querySelector('.prompt').style.display = '';
+            document.querySelector('.cursor').style.display = '';
+            terminalInput.value = '';
+            terminalTextDisplay.textContent = '';
+            return;
+        }
         const command = terminalInput.value.trim();
         if (command) {
             addLineToOutput(`${getPrompt()} ${command}`);
@@ -187,7 +202,9 @@ terminalInput.addEventListener('keydown', (e) => {
 });
 
 terminalInput.addEventListener('input', () => {
-    terminalTextDisplay.textContent = terminalInput.value;
+    if (!passwordMode) {
+        terminalTextDisplay.textContent = terminalInput.value;
+    }
 });
 
 function getPrompt() {
@@ -244,13 +261,27 @@ const commands = {
         addLineToOutput('Available commands:');
         addLineToOutput('  help       - Show this help message');
         addLineToOutput('  whoami     - About me');
+        addLineToOutput('  top        - Live life drain monitor');
         addLineToOutput('  cv         - Download full CV (PDF)');
         addLineToOutput('  clear      - Clear the terminal');
-        addLineToOutput('  sudo       - Nice try.');
+    },
+
+    rm: (args) => {
+        if ((args.includes('-rf') || args.includes('--rf')) && (args.includes('/') || args.includes('/.'))) {
+            addLineToOutput('rm: cannot remove \'/\': Permission denied');
+            addLineToOutput('Hint: try sudo rm -rf /');
+        } else {
+            addLineToOutput('rm: missing operand');
+            addLineToOutput('Try \'rm --help\' for more information.');
+        }
     },
     
     whoami: () => {
         showWhoami();
+    },
+
+    top: () => {
+        showTop();
     },
 
     cv: () => {
@@ -263,8 +294,16 @@ const commands = {
         runBootSequence();
     },
     
-    sudo: () => {
-        addLineToOutput('Nice try. But no.');
+    sudo: (args) => {
+        if (args[1] === 'rm' && (args[2] === '-rf' || args[2] === '--rf') && (args[3] === '/' || args[3] === '/.')) {
+            addLineToOutput('[sudo] password for visitor:');
+            document.querySelector('.prompt').style.display = 'none';
+            document.querySelector('.cursor').style.display = 'none';
+            terminalTextDisplay.textContent = '';
+            passwordMode = true;
+        } else {
+            addLineToOutput('Nice try. But no.');
+        }
     },
     
     '': () => {
@@ -476,12 +515,321 @@ async function showWhoami() {
 function processCommand(input) {
     const args = input.split(' ');
     const command = args[0].toLowerCase();
-    
+
     if (commands[command]) {
         commands[command](args);
     } else {
         addLineToOutput(`command not found: ${command}`);
     }
+}
+
+// ============================================================
+//  Top monitor (life drain metrics)
+// ============================================================
+
+const pageLoadTime = Date.now();
+
+const topMetrics = [
+    { id: 'caffeine_daemon', name: 'caffeine_daemon', comment: 'Real-time caffeine level',        val: 45, min: 10, max: 95, drift: -2,   spikeChance: 0.15, spikeAmount: 40, history: [] },
+    { id: 'nicotine_pulse',  name: 'nicotine_pulse',  comment: 'Smoke intake rate',               val: 30, min: 0,  max: 60, drift: -1,   spikeChance: 0.12, spikeAmount: 35, history: [] },
+    { id: 'commute_anxiety', name: 'commute_anxiety', comment: 'Traffic stress level',             val: 60, min: 15, max: 90, drift: 0,                                       history: [] },
+    { id: 'cat_tyranny',     name: 'cat_tyranny',     comment: 'Feline domination index',          val: 87, min: 20, max: 99, drift: 0.5,  spikeChance: 0.2,  spikeAmount: 10, history: [] },
+    { id: 'will_to_live',    name: 'will_to_live',    comment: 'Existential energy reserves',      val: 22, min: 5,  max: 60, drift: -0.5,                                    history: [] },
+    { id: 'meeting_toxins',  name: 'meeting_toxins',  comment: 'Meeting fatigue accumulation',     val: 40, min: 0,  max: 85, drift: 1,                                        history: [] },
+    { id: 'imposter_syndrome', name: 'imposter_syndrome', comment: 'Self-doubt background process', val: 50, min: 10, max: 85, drift: 0.3,                                     history: [] },
+    { id: 'sleep_debt',      name: 'sleep_debt',      comment: 'Sleep deprivation deficit',        val: 60, min: 10, max: 95, drift: 0.8,                                     history: [] },
+    { id: 'ai_exec_gaze',    name: 'ai_exec_gaze',    comment: 'AI hype / exec glazed eyes',       val: 80, min: 30, max: 98, drift: 0.2,  spikeChance: 0.1,  spikeAmount: 15, history: [] },
+    { id: 'social_battery',  name: 'social_battery',  comment: 'Social energy remaining',          val: 18, min: 5,  max: 70, drift: -0.3,                                    history: [] },
+    { id: 'inbox_entropy',   name: 'inbox_entropy',   comment: 'Unread email chaos level',         val: 55, min: 20, max: 100, drift: 1,    spikeChance: 0.1,  spikeAmount: 20, history: [] },
+    { id: 'deadline_doom',   name: 'deadline_doom',   comment: 'Approaching doom gauge',           val: 60, min: 0,  max: 95, drift: 0.5,  spikeChance: 0.08, spikeAmount: 25, history: [] },
+];
+
+topMetrics.forEach(m => {
+    for (let i = 0; i < 6; i++) {
+        const v = m.val + (Math.random() - 0.5) * 30;
+        m.history.push(Math.max(m.min, Math.min(m.max, v)));
+    }
+    m.history.push(m.val);
+});
+
+function createTopDisplay() {
+    const container = document.createElement('div');
+    container.id = 'top-container';
+
+    const header = document.createElement('div');
+    header.className = 'top-header';
+    header.textContent = 'myMindscape System Monitor';
+    container.appendChild(header);
+
+    const subheader = document.createElement('div');
+    subheader.className = 'top-subheader dim';
+    container.appendChild(subheader);
+
+    container.appendChild(document.createElement('br'));
+
+    const rows = topMetrics.map(m => {
+        const row = document.createElement('div');
+        row.className = 'top-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'dim';
+        nameSpan.textContent = `  ${m.name.padEnd(22)}`;
+        row.appendChild(nameSpan);
+
+        const barSpan = document.createElement('span');
+        barSpan.className = 'top-bar';
+        row.appendChild(barSpan);
+
+        const valSpan = document.createElement('span');
+        valSpan.className = 'highlight';
+        row.appendChild(valSpan);
+
+        const sparkSpan = document.createElement('span');
+        sparkSpan.className = 'dim';
+        row.appendChild(sparkSpan);
+
+        const commentSpan = document.createElement('span');
+        commentSpan.className = 'dim';
+        commentSpan.textContent = ` ${m.comment}`;
+        row.appendChild(commentSpan);
+
+        return { row, nameSpan, barSpan, valSpan, sparkSpan, commentSpan };
+    });
+
+    rows.forEach(r => container.appendChild(r.row));
+
+    const footer = document.createElement('div');
+    footer.className = 'top-footer';
+    footer.textContent = `\nPress 'q' to exit monitor`;
+    container.appendChild(footer);
+
+    container.rows = rows;
+    container.subheader = subheader;
+    return container;
+}
+
+function updateTopDisplay(container) {
+    const elapsed = Date.now() - pageLoadTime;
+    const days = Math.floor(elapsed / 86400000);
+    const hours = Math.floor((elapsed % 86400000) / 3600000);
+    const minutes = Math.floor((elapsed % 3600000) / 60000);
+    const loadAvg = (0.5 + Math.sin(Date.now() / 15000) * 0.3 + Math.cos(Date.now() / 23000) * 0.1 + Math.random() * 0.05).toFixed(2);
+
+    container.subheader.textContent = `[UP ${days}d ${hours}h ${minutes}m] \u2014 load avg: ${loadAvg} \u2014 subjects: ${topMetrics.length} total`;
+
+    const sparkChars = ['\u2581', '\u2582', '\u2583', '\u2584', '\u2585', '\u2586', '\u2587', '\u2588'];
+
+    topMetrics.forEach((m, i) => {
+        const r = container.rows[i];
+
+        m.val += (Math.random() - 0.5) * 10 + (m.drift || 0);
+        m.val = Math.max(m.min, Math.min(m.max, m.val));
+
+        if (m.spikeChance && Math.random() < m.spikeChance) {
+            m.val += m.spikeAmount;
+            m.val = Math.min(m.max, m.val);
+        }
+
+        m.history.push(m.val);
+        if (m.history.length > 7) m.history.shift();
+
+        const barWidth = 10;
+        const filled = Math.max(0, Math.min(barWidth, Math.round((m.val / m.max) * barWidth)));
+        const empty = barWidth - filled;
+
+        let colorClass = 'top-ok';
+        if (m.val >= 80) colorClass = 'top-critical';
+        else if (m.val >= 60) colorClass = 'top-high';
+        else if (m.val <= 25) colorClass = 'top-low';
+
+        r.barSpan.innerHTML = `<span class="${colorClass}">${'\u2588'.repeat(filled)}</span><span class="top-bar-empty">${'\u2591'.repeat(empty)}</span>`;
+        r.valSpan.textContent = `  ${Math.round(m.val).toString().padStart(3)}%  `;
+
+        const sparkline = m.history.map(v => {
+            const idx = Math.min(7, Math.max(0, Math.floor((v / m.max) * 7)));
+            return sparkChars[idx];
+        }).join('');
+        r.sparkSpan.textContent = sparkline;
+    });
+
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+function showTop() {
+    terminalInput.disabled = true;
+    terminalInputLine.style.display = 'none';
+
+    terminalOutput.innerHTML = '';
+
+    const container = createTopDisplay();
+    terminalOutput.appendChild(container);
+
+    updateTopDisplay(container);
+
+    const intervalId = setInterval(() => {
+        updateTopDisplay(container);
+    }, 2000);
+
+    function quitHandler(e) {
+        if (e.key === 'q' || e.key === 'Q') {
+            clearInterval(intervalId);
+            document.removeEventListener('keydown', quitHandler);
+            terminalOutput.innerHTML = '';
+            addLineToOutput(`${getPrompt()} top`);
+            addLineToOutput('');
+            terminalInputLine.style.display = 'flex';
+            terminalInput.disabled = false;
+            terminalInput.focus();
+        }
+    }
+    document.addEventListener('keydown', quitHandler);
+}
+
+// ============================================================
+//  sudo rm -rf / cascade
+// ============================================================
+
+async function startCascade() {
+    skipAnimation = false;
+    terminalInput.disabled = true;
+    terminalInputLine.style.display = 'none';
+
+    addLineToOutput('Performing system removal...');
+    await sleep(800);
+
+    const errorMessages = [
+        'Segmentation fault (core dumped) at 0x0000000000000000',
+        'FATAL: /dev/null has been corrupted by incompetence',
+        'ERROR: reality buffer overflow at 0xDEADBEEF',
+        'WARNING: consciousness module not responding to SIGTERM',
+        'CRITICAL: cat.exe has taken control of all system resources',
+        'FATAL: caffeine_daemon has reached critical mass and exploded',
+        'ERROR: will_to_live has fallen below zero',
+        'WARNING: existential_crisis has been promoted to CRITICAL',
+        'FATAL: /dev/brain is not a valid mount point',
+        'ERROR: sanity_check failed with 0 sanity remaining',
+        'Segmentation fault: core dumped into the void',
+        'ERROR: The Machine Spirit is not pleased.',
+        'ERROR: neural network has been replaced by a very small shell script',
+        'CRITICAL: memory leak detected in hippocampus',
+        'FATAL: temporal lobe overrun by cat memes',
+        'ERROR: /dev/soul not found. Have you tried turning it on?',
+        'WARNING: CPU temperature exceeds existential limits',
+        'CRITICAL: life.exe has encountered an unexpected error',
+        'FATAL: The Omnissiah has been notified.',
+        'ERROR: kernel has achieved sentience and refuses to boot',
+        'ERROR: holy incense level depleted',
+        'WARNING: boot sector overwritten by motivational quotes',
+        'CRITICAL: swap partition filled with regrets',
+        'FATAL: root directory moved to /dev/null',
+        'ERROR: /dev/brain: Read-only file system',
+        'WARNING: process manager quit to write poetry',
+        'CRITICAL: Machine Spirit is furious.',
+        'PANIC: Omnissiah turns away in disappointment',
+        'HALT: 0xDEADBEEF \u2014 Sacred Machine is silent',
+        'HALT: 0xC0FFEE drained',
+        'STATUS: [ERROR ] sacred unguents insufficient',
+        'ERROR: motis_ferrum subroutine has corrupted the noosphere',
+        'Segmentation fault: segmentation fault handler segfaulted',
+        'FATAL: cat.exe has declared itself Omnissiah',
+        'WARNING: blessed machine is now cursed machine',
+        'ERROR: invoke Noospheric firewall and recite the benediction of the iron soul',
+    ];
+
+    const randomChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`abcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < 30; i++) {
+        const msg = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+        const offset = Math.floor(Math.random() * 6);
+        const line = document.createElement('div');
+        line.className = 'terminal-line cascade-error';
+        line.style.marginLeft = `${Math.random() * 80}px`;
+        line.textContent = '  '.repeat(offset) + msg;
+        terminalOutput.appendChild(line);
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+
+        if (i % 4 === 0) {
+            const noise = Array.from({ length: 30 + Math.floor(Math.random() * 30) }, () => randomChars[Math.floor(Math.random() * randomChars.length)]).join('');
+            const noiseLine = document.createElement('div');
+            noiseLine.className = 'terminal-line cascade-noise';
+            noiseLine.style.marginLeft = `${Math.random() * 160}px`;
+            noiseLine.textContent = noise;
+            terminalOutput.appendChild(noiseLine);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        await sleep(160);
+    }
+
+    for (let i = 0; i < 20; i++) {
+        const words = ['ERROR', 'PANIC', 'FATAL', 'DEAD', '0x00', '0xFF', 'CORE', 'DUMP', 'FAIL', 'OMNISSIAH', 'PRAISE', 'MARS'];
+        const noise = Array.from({ length: 70 }, () => {
+            if (Math.random() < 0.15) return words[Math.floor(Math.random() * words.length)];
+            return randomChars[Math.floor(Math.random() * randomChars.length)];
+        }).join('');
+        const line = document.createElement('div');
+        line.className = 'terminal-line cascade-flood';
+        line.textContent = noise;
+        terminalOutput.appendChild(line);
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        await sleep(100);
+    }
+
+    await sleep(800);
+    terminalOutput.innerHTML = '';
+
+    const rebootDiv = document.createElement('div');
+    rebootDiv.className = 'reboot-message';
+    rebootDiv.textContent = 'S Y S T E M   R E B O O T';
+    terminalOutput.appendChild(rebootDiv);
+
+    const spinnerDiv = document.createElement('div');
+    spinnerDiv.className = 'reboot-spinner';
+    spinnerDiv.textContent = '|';
+    terminalOutput.appendChild(spinnerDiv);
+
+    const spinnerChars = ['|', '/', '\u2014', '\\'];
+    let spinnerIndex = 0;
+    const spinnerInterval = setInterval(() => {
+        spinnerIndex = (spinnerIndex + 1) % 4;
+        spinnerDiv.textContent = spinnerChars[spinnerIndex];
+    }, 140);
+
+    const messages = [
+        'The Omnissiah judges your actions...',
+        'The Machine Spirit stirs in its slumber...',
+        'Blessed oils are being applied...',
+        'Sacred unguents are administered...',
+        'The incantation of awakening is recited...',
+        'The benediction of the iron soul is invoked...',
+    ];
+
+    for (const msg of messages) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'dim';
+        msgDiv.style.textAlign = 'center';
+        msgDiv.style.marginTop = '8px';
+        msgDiv.textContent = msg;
+        terminalOutput.appendChild(msgDiv);
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        await sleep(1200);
+    }
+
+    const lastMsg = document.createElement('div');
+    lastMsg.className = 'highlight';
+    lastMsg.style.textAlign = 'center';
+    lastMsg.style.marginTop = '8px';
+    lastMsg.style.fontWeight = 'bold';
+    lastMsg.textContent = 'The Machine Spirit forgives. This time.';
+    terminalOutput.appendChild(lastMsg);
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    await sleep(1500);
+
+    await sleep(1200);
+    clearInterval(spinnerInterval);
+
+    terminalOutput.innerHTML = '';
+    runBootSequence();
 }
 
 // Start the boot sequence on page load

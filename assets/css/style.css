@@ -67,8 +67,106 @@ body::before {
     z-index: 1000;
 }
 
-@keyframes blink {
-    50% { opacity: 0; }
+/* Top monitor (life drain metrics) */
+#top-container {
+    padding: 0.5em 0;
+}
+
+.top-header {
+    color: #ffcc80;
+    text-shadow: 0 0 6px rgba(255, 204, 128, 0.6);
+    margin-bottom: 2px;
+}
+
+.top-subheader {
+    color: #b8860b;
+    margin-bottom: 8px;
+}
+
+.top-row {
+    margin: 2px 0;
+    white-space: pre;
+}
+
+.top-bar {
+    display: inline-block;
+}
+
+.top-critical {
+    color: #ffb347;
+    text-shadow: 0 0 8px rgba(255, 179, 71, 0.7);
+}
+
+.top-high {
+    color: #cc8800;
+    text-shadow: 0 0 4px rgba(255, 179, 71, 0.4);
+}
+
+.top-ok {
+    color: #996600;
+}
+
+.top-low {
+    color: #553300;
+}
+
+.top-bar-empty {
+    color: #332200;
+    opacity: 0.4;
+}
+
+.top-footer {
+    margin-top: 12px;
+    color: #997700;
+    text-shadow: 0 0 2px rgba(255, 179, 71, 0.2);
+}
+
+/* sudo rm -rf / cascade */
+.cascade-error {
+    color: #ff4444;
+    text-shadow: 0 0 6px rgba(255, 68, 68, 0.5);
+}
+
+.cascade-noise {
+    color: #664400;
+    opacity: 0.6;
+}
+
+.cascade-flood {
+    color: #884400;
+    opacity: 0.5;
+}
+
+.reboot-message {
+    color: #ffcc44;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(255, 204, 68, 0.9);
+    margin: 20px 0;
+    animation: flicker-out 2s ease-in-out infinite;
+}
+
+.reboot-spinner {
+    color: #ffcc44;
+    font-size: 32px;
+    text-align: center;
+    text-shadow: 0 0 12px rgba(255, 204, 68, 0.7);
+    margin-top: 12px;
+}
+
+@keyframes flicker-out {
+    0%   { opacity: 0.2; }
+    10%  { opacity: 1; }
+    20%  { opacity: 0.2; }
+    30%  { opacity: 1; }
+    40%  { opacity: 0.5; }
+    50%  { opacity: 0.2; }
+    60%  { opacity: 0.8; }
+    70%  { opacity: 0.1; }
+    80%  { opacity: 1; }
+    90%  { opacity: 0.3; }
+    100% { opacity: 0.8; }
 }
 
 /* Bright amber for emphasis / bold */
