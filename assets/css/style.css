@@ -354,3 +354,67 @@ body::before {
     border-color: #ffb347;
     text-shadow: 0 0 6px rgba(255, 179, 71, 0.7);
 }
+
+#dungeon-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.dungeon-modal-content {
+    background: #0a0a0a;
+    border: 1px solid #553300;
+    padding: 24px;
+    width: 90%;
+    max-width: 320px;
+}
+
+.dungeon-modal-title {
+    color: #ffcc80;
+    font-weight: bold;
+    text-shadow: 0 0 4px rgba(255, 204, 128, 0.8);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.dungeon-modal-row {
+    margin-bottom: 16px;
+}
+
+.dungeon-modal-row label {
+    display: flex;
+    justify-content: space-between;
+    color: #b8860b;
+    margin-bottom: 4px;
+}
+
+.dungeon-modal-row .dm-val {
+    color: #ffb347;
+    text-shadow: 0 0 4px rgba(255, 179, 71, 0.5);
+}
+
+.dungeon-modal-row input[type="range"] {
+    width: 100%;
+    accent-color: #ffb347;
+    background: #1a1a1a;
+    height: 4px;
+}
+
+.dungeon-modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.dungeon-modal-buttons .mobile-btn {
+    min-width: 100px;
+}

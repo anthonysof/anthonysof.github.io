@@ -229,6 +229,10 @@ if (isMobile) {
     document.querySelectorAll('.mobile-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             if (terminalInput.disabled) return;
+            if (btn.dataset.command === 'dungeon') {
+                showDungeonModal();
+                return;
+            }
             const command = btn.dataset.command;
             addLineToOutput(`${getPrompt()} ${command}`);
             processCommand(command);
@@ -450,7 +454,7 @@ const commands = {
 
         try {
             const result = window.dungeon.generate(width, height, caIters, floorChance);
-            addLineToOutput(`[ OK ] Generated map (${result.width}x${result.height}, ${result.roomCount} rooms)`);
+            addLineToOutput(`[ OK ] Generated map (${result.width}x${result.height})`);
             addLineToOutput('');
             window.dungeon.render(result.tiles, result.width, result.height, terminalOutput);
             addLineToOutput('');
@@ -716,6 +720,36 @@ async function animateRightColumn(column) {
     ]);
     await sleep(80);
     addLineToColumn(column, '');
+}
+
+function showDungeonModal() {
+    const modal = document.getElementById('dungeon-modal');
+    modal.style.display = 'flex';
+
+    document.querySelectorAll('#dungeon-modal input[type="range"]').forEach(slider => {
+        const name = slider.id.replace('dm-', '');
+        const valSpan = document.getElementById(`dm-${name}-val`);
+        const handler = () => { valSpan.textContent = slider.value; };
+        slider.addEventListener('input', handler, { once: false });
+    });
+
+    document.getElementById('dm-generate').onclick = submitDungeonModal;
+    document.getElementById('dm-cancel').onclick = hideDungeonModal;
+}
+
+function hideDungeonModal() {
+    document.getElementById('dungeon-modal').style.display = 'none';
+}
+
+function submitDungeonModal() {
+    const w = document.getElementById('dm-width').value;
+    const h = document.getElementById('dm-height').value;
+    const c = document.getElementById('dm-ca-iters').value;
+    const f = document.getElementById('dm-floor-chance').value;
+    hideDungeonModal();
+    const cmd = `dungeon --width ${w} --height ${h} --ca-iters ${c} --floor-chance ${f}`;
+    addLineToOutput(`${getPrompt()} ${cmd}`);
+    processCommand(cmd);
 }
 
 function processCommand(input) {

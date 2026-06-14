@@ -26,6 +26,32 @@
         <button class="mobile-btn" data-command="clear">clear</button>
     </div>
     
+    <div id="dungeon-modal" style="display:none">
+        <div class="dungeon-modal-content">
+            <div class="dungeon-modal-title">Dungeon Generator Settings</div>
+            <div class="dungeon-modal-row">
+                <label>Width <span class="dm-val" id="dm-width-val">80</span></label>
+                <input type="range" id="dm-width" min="10" max="200" value="80">
+            </div>
+            <div class="dungeon-modal-row">
+                <label>Height <span class="dm-val" id="dm-height-val">40</span></label>
+                <input type="range" id="dm-height" min="10" max="200" value="40">
+            </div>
+            <div class="dungeon-modal-row">
+                <label>CA Iterations <span class="dm-val" id="dm-ca-iters-val">4</span></label>
+                <input type="range" id="dm-ca-iters" min="0" max="20" value="4">
+            </div>
+            <div class="dungeon-modal-row">
+                <label>Floor Chance % <span class="dm-val" id="dm-floor-chance-val">44</span></label>
+                <input type="range" id="dm-floor-chance" min="0" max="100" value="44">
+            </div>
+            <div class="dungeon-modal-buttons">
+                <button id="dm-generate" class="mobile-btn">Generate</button>
+                <button id="dm-cancel" class="mobile-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/dungeon/generator.js"></script>
     <script src="assets/js/dungeon.js"></script>
     <script src="assets/js/terminal.js"></script>
