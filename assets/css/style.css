@@ -243,6 +243,38 @@ body::before {
     50% { opacity: 0; }
 }
 
+/* -------------------------------------------------------------------
+ * Dungeon map display
+ * ------------------------------------------------------------------- */
+
+.dungeon-container {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+    padding: 4px;
+    border: 1px solid #553300;
+    display: inline-block;
+}
+
+.dungeon-canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    max-width: 100%;
+    height: auto;
+}
+
+.dungeon-link {
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.dungeon-link:hover span.highlight {
+    color: #ffe0a0;
+    text-shadow: 0 0 6px rgba(255, 224, 160, 0.8);
+}
+
 /* Mobile: touch-based devices (not laptops with touchscreens) */
 @media (hover: none) {
     body {

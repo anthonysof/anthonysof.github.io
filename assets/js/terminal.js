@@ -336,6 +336,7 @@ const commands = {
         addLineToOutput('  help       - Show this help message');
         addLineToOutput('  whoami     - About me');
         addLineToOutput('  top        - Live life drain monitor');
+        addLineToOutput('  dungeon    - Generate a cave map (try --help)');
         addLineToOutput('  cv         - Download full CV (PDF)');
         addLineToOutput('  clear      - Clear the terminal');
     },
@@ -378,6 +379,88 @@ const commands = {
         } else {
             addLineToOutput('Nice try. But no.');
         }
+    },
+
+    dungeon: async (args) => {
+        let width = 80, height = 40, caIters = 4, floorChance = 44;
+
+        for (let i = 1; i < args.length; i++) {
+            if (args[i] === '--help') {
+                addLineToOutput('Dungeon cave map generator — C++ compiled to WebAssembly.');
+                addLineToOutput('  Cellular automata smoothing + flood-fill room labelling');
+                addLineToOutput('  + union-find nearest-neighbour room connection.');
+                addLineToOutput('');
+                addLineToOutput('Usage: dungeon [options]');
+                addLineToOutput('  --width <n>        Map width  (default: 80, max: 200)');
+                addLineToOutput('  --height <n>       Map height (default: 40, max: 200)');
+                addLineToOutput('  --ca-iters <n>     CA smoothing passes (default: 4)');
+                addLineToOutput('  --floor-chance <n> Floor percentage 0-100 (default: 44)');
+                addLineToOutput('  --help             Show this message');
+                return;
+            }
+            if (args[i] === '--width' || args[i] === '--height' || args[i] === '--ca-iters' || args[i] === '--floor-chance') {
+                if (++i >= args.length) {
+                    addLineToOutput(`Missing value for ${args[i-1]}`);
+                    return;
+                }
+                const v = parseInt(args[i]);
+                if (args[i - 1] === '--width')        width = v;
+                else if (args[i - 1] === '--height')  height = v;
+                else if (args[i - 1] === '--ca-iters')  caIters = v;
+                else                                     floorChance = v;
+            } else {
+                addLineToOutput(`Unknown flag: ${args[i]}`);
+                addLineToOutput('  Try dungeon --help');
+                return;
+            }
+        }
+
+        if (!window.dungeon || !window.dungeon.ready()) {
+            const err = window.dungeon && window.dungeon.loadError();
+            if (err) {
+                addLineToOutput(`[ERROR] ${err}`);
+                addLineToOutput('  Make sure the site is served via HTTP (e.g. python3 -m http.server).');
+            } else {
+                addLineToOutput('Generator module is still loading. Stand by.');
+            }
+            return;
+        }
+
+        terminalInput.disabled = true;
+        terminalTextDisplay.textContent = '';
+        enableSkip();
+
+        addLineToOutput('');
+        addLineToOutput('[    ] Loading C++ dungeon generator...');
+        await sleep(300);
+        addLineToOutput('[    ] (compiled to WebAssembly, because JavaScript isn\'t cursed enough)');
+        await sleep(400);
+        addLineToOutput('[    ] Seeding RNG with cosmic background radiation...');
+        await sleep(300);
+        addLineToOutput('[    ] Running cellular automata — the Machine Spirit calculates...');
+        await sleep(350);
+        addLineToOutput('[    ] Flood-filling connected cave chambers...');
+        await sleep(300);
+        addLineToOutput('[    ] Union-find declares: "these rooms shall be neighbours"');
+        await sleep(350);
+        addLineToOutput('[    ] Carving L-shaped tunnels through bedrock...');
+        await sleep(300);
+        addLineToOutput('[    ] Removing rooms too small to host a single goblin...');
+        await sleep(350);
+
+        try {
+            const result = window.dungeon.generate(width, height, caIters, floorChance);
+            addLineToOutput(`[ OK ] Generated map (${result.width}x${result.height}, ${result.roomCount} rooms)`);
+            addLineToOutput('');
+            window.dungeon.render(result.tiles, result.width, result.height, terminalOutput);
+            addLineToOutput('');
+        } catch (e) {
+            addLineToOutput(`[ERROR] ${e.message}`);
+            addLineToOutput('  Try dungeon --help for usage');
+        }
+
+        terminalInput.disabled = false;
+        terminalInput.focus();
     },
     
     '': () => {
@@ -640,7 +723,16 @@ function processCommand(input) {
     const command = args[0].toLowerCase();
 
     if (commands[command]) {
-        commands[command](args);
+        try {
+            const result = commands[command](args);
+            if (result && typeof result.then === 'function') {
+                result.catch(err => {
+                    addLineToOutput(`[ERROR] ${err.message}`);
+                });
+            }
+        } catch (e) {
+            addLineToOutput(`[ERROR] ${e.message}`);
+        }
     } else {
         addLineToOutput(`command not found: ${command}`);
     }
