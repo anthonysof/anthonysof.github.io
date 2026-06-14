@@ -192,7 +192,7 @@ document.addEventListener('click', () => {
     }
 });
 
-terminalInput.addEventListener('keydown', (e) => {
+if (terminalInput) terminalInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         if (passwordMode) {
             const pwd = terminalInput.value.trim();
@@ -219,7 +219,7 @@ terminalInput.addEventListener('keydown', (e) => {
     }
 });
 
-terminalInput.addEventListener('input', () => {
+if (terminalInput) terminalInput.addEventListener('input', () => {
     if (!passwordMode) {
         terminalTextDisplay.textContent = terminalInput.value;
     }

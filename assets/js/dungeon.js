@@ -16,6 +16,7 @@ async function initDungeonGenerator() {
 }
 
 // Start loading immediately
+console.debug('[dungeon] generator module initializing...');
 initDungeonGenerator();
 
 // -------------------------------------------------------------------
